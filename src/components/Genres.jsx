@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Genres.css";
+import { UserContext } from "../context";
 
 function Genres() {
     const [genres, setGenres] = useState([]);
     const navigate = useNavigate();
+    const { user } = useContext(UserContext);
 
     useEffect(() => {
         axios
@@ -22,11 +24,15 @@ function Genres() {
             .catch((error) => console.error("Error fetching genres:", error));
     }, []);
 
+    const userGenres = genres.filter((genre) =>
+        user.genres && user.genres.includes(genre.name)
+    );
+
     return (
         <div className="genres-container">
-            {genres.length ? (
+            {userGenres.length ? (
                 <ul className="genres-list">
-                    {genres.map((genre) => (
+                    {userGenres.map((genre) => (
                         <li key={genre.id}>
                             <button
                                 className="genre-button"
@@ -38,7 +44,7 @@ function Genres() {
                     ))}
                 </ul>
             ) : (
-                <p>No genres available. Please try again later.</p>
+                <p>No genres selected. Please register and select your favorite genres.</p>
             )}
         </div>
     );

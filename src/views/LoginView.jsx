@@ -1,16 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LoginView.css";
 import Header from "../components/Header";
+import { UserContext } from "../context";
 
 function LoginView() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
+    const { user } = useContext(UserContext);
 
     const handleLogin = (e) => {
         e.preventDefault();
-        navigate("/movies");
+        if (email === user.email && password === user.password) {
+            navigate("/movies");
+        } else {
+            alert("Invalid email or password.");
+        }
     };
 
     return (

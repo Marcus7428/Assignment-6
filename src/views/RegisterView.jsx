@@ -1,34 +1,108 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import "./RegisterView.css";
 import Header from "../components/Header";
+import { UserContext } from "../context";
+import axios from "axios";
 
 export default function RegisterView() {
   const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    genres: [],
   });
-  const [error, setError] = useState("");
+  const [genres, setGenres] = useState([]);
+  const [touched, setTouched] = useState({});
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  useEffect(() => {
+    axios.get(`https://api.themoviedb.org/3/genre/movie/list?api_key=${import.meta.env.VITE_TMDB_KEY}`)
+      .then(response => {
+        const allowedGenres = response.data.genres.filter(genre => 
+          [28, 12, 16, 10751, 14, 36, 27, 9648, 878, 10752, 37, 80].includes(genre.id)
+        );
+        setGenres(allowedGenres);
+      })
+      .catch(error => console.error("Error fetching genres:", error));
+  }, []);
 
-  const handleSubmit = (e) => {
+  function validateEmail(email) {
+    if(email.includes("@") && email.includes(".")) return true;
+    return false;
+  }
+
+  function validateForm() {
+    const validFirstName = formData.firstName.trim().length > 0;
+    const validLastName = formData.lastName.trim().length > 0;
+    const validEmail = validateEmail(formData.email);
+    const validPassword = formData.password.length >= 6;
+    const passwordsMatch = formData.password === formData.confirmPassword;
+    const validGenres = formData.genres.length >= 5;
+    
+    return validFirstName && validLastName && validEmail && validPassword && passwordsMatch && validGenres;
+  }
+
+  function handleChange(e) {
+    const field = e.target;
+    const newValue = field.type === "checkbox" ? field.checked : field.value;
+
+    if(field.type === "checkbox") {
+      let newGenres = [...formData.genres];
+      if(newValue) {
+        newGenres.push(field.value);
+      } else {
+        newGenres = newGenres.filter(g => g !== field.value);
+      }
+      setFormData(prev => ({ ...prev, genres: newGenres }));
+    } else {
+      setFormData(prev => ({ ...prev, [field.name]: newValue }));
+    }
+    
+    setTouched(prev => ({ ...prev, [field.name]: true }));
+  }
+
+  function handleSubmit(e) {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+    if(!validateForm()) {
+      alert("Please complete all fields properly:\n- Valid email\n- 6+ character password\n- Matching passwords\n- 5+ genres selected");
       return;
     }
-    setError("");
-    console.log("Form submitted:", formData);
-    navigate("/movies");
-  };
+
+setUser({
+  firstName: formData.firstName,
+  lastName: formData.lastName,
+  email: formData.email,
+  password: formData.password, // <-- Add this line
+  genres: formData.genres,
+});
+
+    let firstGenreId = 28;
+    if(genres.length > 0) {
+      const foundGenre = genres.find(g => g.name === formData.genres[0]);
+      if(foundGenre) firstGenreId = foundGenre.id;
+    }
+    navigate(`/movies`);
+  }
+
+  function renderGenresCheckboxes() {
+    if(genres.length === 0) return <span>Loading genres...</span>;
+    return genres.map(genre => (
+      <label key={genre.id} className="genre-checkbox">
+        <input
+          type="checkbox"
+          name="genres"
+          value={genre.name}
+          checked={formData.genres.includes(genre.name)}
+          onChange={handleChange}
+        />
+        {genre.name}
+      </label>
+    ));
+  }
 
   return (
     <>
@@ -37,28 +111,20 @@ export default function RegisterView() {
         <div className="register-form">
           <h2 className="register-title">Register</h2>
           <form onSubmit={handleSubmit} className="form">
-            <div className="form-group">
-              <label className="form-label">First Name</label>
-              <input
-                type="text"
-                name="firstName"
-                className="form-input"
-                value={formData.firstName}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Last Name</label>
-              <input
-                type="text"
-                name="lastName"
-                className="form-input"
-                value={formData.lastName}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            {["firstName", "lastName"].map(field => (
+              <div className="form-group" key={field}>
+                <label className="form-label">{field.split(/(?=[A-Z])/).join(" ")}</label>
+                <input
+                  type="text"
+                  name={field}
+                  className="form-input"
+                  value={formData[field]}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            ))}
+
             <div className="form-group">
               <label className="form-label">Email</label>
               <input
@@ -69,7 +135,11 @@ export default function RegisterView() {
                 onChange={handleChange}
                 required
               />
+              {touched.email && !validateEmail(formData.email) && (
+                <span className="error-message">Invalid email format</span>
+              )}
             </div>
+
             <div className="form-group">
               <label className="form-label">Password</label>
               <input
@@ -79,8 +149,13 @@ export default function RegisterView() {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                minLength={6}
               />
+              {touched.password && formData.password.length < 6 && (
+                <span className="error-message">Password must be at least 6 characters</span>
+              )}
             </div>
+
             <div className="form-group">
               <label className="form-label">Confirm Password</label>
               <input
@@ -91,14 +166,27 @@ export default function RegisterView() {
                 onChange={handleChange}
                 required
               />
+              {touched.confirmPassword && formData.password !== formData.confirmPassword && (
+                <span className="error-message">Passwords do not match</span>
+              )}
             </div>
-            {error && <p className="error-message">{error}</p>}
-            <button type="submit" className="submit-btn">
+
+            <div className="form-group">
+              <label className="form-label">Select Your Favorite Genres (at least 5):</label>
+              <div className="genres-checkboxes">
+                {renderGenresCheckboxes()}
+              </div>
+              {touched.genres && formData.genres.length < 5 && (
+                <span className="error-message">Select at least 5 genres</span>
+              )}
+            </div>
+
+            <button type="submit" className="submit-btn" disabled={!validateForm()}>
               Register
             </button>
           </form>
         </div>
       </div>
-  </>
-        );
+    </>
+  );
 }

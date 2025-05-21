@@ -6,6 +6,8 @@ import GenreView from "./views/GenreView";
 import LoginView from "./views/LoginView";
 import RegisterView from "./views/RegisterView";
 import ErrorView from "./views/ErrorView";
+import CartView from "./views/CartView";
+import SettingView from "./views/SettingView";
 
 function App() {
     return (
@@ -16,6 +18,8 @@ function App() {
                     <Route path="details/:id" element={<MovieDetailView />} />
                     <Route path=":genre_id" element={<GenreView />} />
                 </Route>
+                <Route path="/cart" element={<CartView />} />
+                <Route path="/settings" element={<SettingView />} /> {/* <-- Add this line */}
                 <Route path="/login" element={<LoginView />} />
                 <Route path="/register" element={<RegisterView />} />
                 <Route path="*" element={<ErrorView />} />
