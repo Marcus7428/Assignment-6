@@ -81,12 +81,19 @@ export default function RegisterView() {
       genres: formData.genres,
     });
 
-    let firstGenreId = 28;
-    if (genres.length > 0) {
+    // Find the ID of the first genre the user picked
+    let firstGenreId = null;
+    if (genres.length > 0 && formData.genres.length > 0) {
       const foundGenre = genres.find((g) => g.name === formData.genres[0]);
       if (foundGenre) firstGenreId = foundGenre.id;
     }
-    navigate(`/movies`);
+
+    // Navigate to the first picked genre, or fallback to /movies
+    if (firstGenreId) {
+      navigate(`/movies/${firstGenreId}`);
+    } else {
+      navigate(`/movies`);
+    }
   }
 
   function renderGenresCheckboxes() {
