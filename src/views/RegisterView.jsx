@@ -112,14 +112,14 @@ export default function RegisterView() {
         <div className="register-form">
           <h2 className="register-title">Register</h2>
           <form onSubmit={handleSubmit} className="form">
-            {["firstName", "lastName"].map((field) => (
+            {["First Name", "Last Name"].map((field) => (
               <div className="form-group" key={field}>
-                <label className="form-label">{field.split(/(?=[A-Z])/).join(" ")}</label>
+                <label className="form-label">{field}</label>
                 <input
                   type="text"
-                  name={field}
+                  name={field.toLowerCase().replace(" ", "")}
                   className="form-input"
-                  value={formData[field]}
+                  value={formData[field.toLowerCase().replace(" ", "")]}
                   onChange={handleChange}
                   required
                 />

@@ -59,7 +59,7 @@ function GenreView() {
                             </button>
                         ) : (
                             <button className="added-btn" onClick={() => handleRemove(movie)}>
-                                Added
+                                Added to cart
                             </button>
                         )}
                     </div>
