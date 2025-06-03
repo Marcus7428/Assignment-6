@@ -8,6 +8,7 @@ function SearchView() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
+    const [cart, setCart] = useState([]); // State to track cart items
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -54,6 +55,16 @@ function SearchView() {
         }
     };
 
+    const handleAddToCart = (movie) => {
+        if (cart.some((item) => item.id === movie.id)) {
+            // Remove from cart if already added
+            setCart((prevCart) => prevCart.filter((item) => item.id !== movie.id));
+        } else {
+            // Add to cart
+            setCart((prevCart) => [...prevCart, movie]);
+        }
+    };
+
     return (
         <div className="search-view-container">
             {isLoading ? (
@@ -61,27 +72,39 @@ function SearchView() {
             ) : movies.length > 0 ? (
                 <>
                     <div className="search-results-grid">
-                        {movies.map((movie) => (
-                            <div
-                                className="search-movie-tile"
-                                key={movie.id}
-                                onClick={() => navigate(`/movies/details/${movie.id}`)}
-                            >
-                                <img
-                                    className="search-movie-poster"
-                                    src={
-                                        movie.poster_path
-                                            ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                                            : "https://via.placeholder.com/500x750?text=No+Image"
-                                    }
-                                    alt={movie.title}
-                                />
-                                <h3 className="search-movie-title">{movie.title}</h3>
-                                <p className="search-movie-date">
-                                    {movie.release_date || "Unknown Release Date"}
-                                </p>
-                            </div>
-                        ))}
+                        {movies.map((movie) => {
+                            const inCart = cart.some((item) => item.id === movie.id);
+                            return (
+                                <div
+                                    className="search-movie-tile"
+                                    key={movie.id}
+                                    onClick={() => navigate(`/movies/details/${movie.id}`)}
+                                >
+                                    <img
+                                        className="search-movie-poster"
+                                        src={
+                                            movie.poster_path
+                                                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                                                : "https://via.placeholder.com/500x750?text=No+Image"
+                                        }
+                                        alt={movie.title}
+                                    />
+                                    <h3 className="search-movie-title">{movie.title}</h3>
+                                    <p className="search-movie-date">
+                                        {movie.release_date || "Unknown Release Date"}
+                                    </p>
+                                    <button
+                                        className={`cart-btn ${inCart ? "remove" : "add"}`}
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Prevent navigation when clicking the button
+                                            handleAddToCart(movie);
+                                        }}
+                                    >
+                                        {inCart ? "Remove from Cart" : "Add to Cart"}
+                                    </button>
+                                </div>
+                            );
+                        })}
                     </div>
                     <div className="search-pagination">
                         <button
