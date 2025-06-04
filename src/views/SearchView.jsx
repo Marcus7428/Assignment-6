@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "./SearchView.css";
+import { UserContext } from "../context";
 
 function SearchView() {
     const [movies, setMovies] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
-    const [cart, setCart] = useState([]); // State to track cart items
 
+    const { cart, setCart } = useContext(UserContext); // Use global cart state
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -90,9 +91,6 @@ function SearchView() {
                                         alt={movie.title}
                                     />
                                     <h3 className="search-movie-title">{movie.title}</h3>
-                                    <p className="search-movie-date">
-                                        {movie.release_date || "Unknown Release Date"}
-                                    </p>
                                     <button
                                         className={`cart-btn ${inCart ? "remove" : "add"}`}
                                         onClick={(e) => {
